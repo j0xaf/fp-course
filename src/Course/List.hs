@@ -53,10 +53,15 @@ infinity =
 foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
+-- foldRight is !!! CONSTRUCTOR REPLACEMENT !!!
+-- foldRight f b (h :. t) = h `f` (foldRight f b t)
+
 
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
 foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
+
+-- foldLeft is !!! LOOP !!!
 
 -- END Helper functions and data types
 
@@ -167,6 +172,11 @@ filter p = foldRight (\a -> if (p a) then (a :.) else id) Nil
 
 infixr 5 ++
 
+-- foldRight :: (a -> b -> b) -> b -> List a -> b
+-- foldRight (:.) :: b -> List a -> b
+-- flip (foldRight (:.)) :: List a -> b -> b (with b ~ List a)
+
+
 -- | Flatten a list of lists to a list.
 --
 -- >>> flatten ((1 :. 2 :. 3 :. Nil) :. (4 :. 5 :. 6 :. Nil) :. (7 :. 8 :. 9 :. Nil) :. Nil)
@@ -254,8 +264,7 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find p = foldRight (\a o -> if p a then Full a else o) Empty
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -273,8 +282,8 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 (_ :. _ :. _ :. _ :. _ :. _) = True
+lengthGT4 _ = False
 
 -- | Reverse a list.
 --
@@ -290,8 +299,16 @@ lengthGT4 =
 reverse ::
   List a
   -> List a
-reverse =
-  error "todo: Course.List#reverse"
+reverse = foldLeft (flip (:.)) Nil
+
+-- [1,2,3]
+--    f               f
+--   / \             / \
+--   f  3           1  f
+--  / \               / \
+--  f  2              2  f
+-- / \                  / \
+-- z  1                 3  z
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -319,8 +336,7 @@ produce f x = x :. produce f (f x)
 notReverse ::
   List a
   -> List a
-notReverse =
-  error "todo: Is it even possible?"
+notReverse = id
 
 ---- End of list exercises
 
