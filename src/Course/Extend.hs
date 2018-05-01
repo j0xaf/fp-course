@@ -33,8 +33,8 @@ instance Extend ExactlyOne where
     (ExactlyOne a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance ExactlyOne"
+  (<<=) f = ExactlyOne . f
+
 
 -- | Implement the @Extend@ instance for @List@.
 --
@@ -51,8 +51,11 @@ instance Extend List where
     (List a -> b)
     -> List a
     -> List b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance List"
+  (<<=) f Nil = Nil
+  (<<=) f l@(_ :. xs) = f l :. (f <<= xs)
+
+-- This is not possible to do via 'foldRight'. We need access to the tail of the /original/ list at each step of the recursion, which
+-- 'foldRight' does not give us.
 
 -- | Implement the @Extend@ instance for @Optional@.
 --
@@ -66,8 +69,7 @@ instance Extend Optional where
     (Optional a -> b)
     -> Optional a
     -> Optional b
-  (<<=) =
-    error "todo: Course.Extend (<<=)#instance Optional"
+  (<<=) f o = f . Full <$> o -- ^ has only an effect if @o@ is 'Full'; in that case repackage in 'Full' and run @f@ over it.
 
 -- | Duplicate the functor using extension.
 --
@@ -86,5 +88,4 @@ cojoin ::
   Extend f =>
   f a
   -> f (f a)
-cojoin =
-  error "todo: Course.Extend#cojoin"
+cojoin = (<<=) id
